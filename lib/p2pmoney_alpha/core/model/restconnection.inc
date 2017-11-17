@@ -15,6 +15,8 @@ class RestConnection {
 	private $bcleanurl = false;
 	private $parameter = 'path';
 	
+	private $extraheaders = array();
+	
 	protected function getApiContext() {
 
 		$context = array();
@@ -22,6 +24,8 @@ class RestConnection {
 		$context['base_url'] = $this->context['base_url'];
 		$context['access_token'] = $this->context['access_token'];
 		$context['domain'] = $this->context['domain'];
+		$context['accept'] = $this->context['accept'];
+		$context['contenttype'] = $this->context['contenttype'];
 		
 		return $context;
 	}
@@ -72,6 +76,18 @@ class RestConnection {
 		$this->context['domain'] = $domain;
 	}
 	
+	public function setApplicationType($accept) {
+		$this->context['accept'] = $accept;
+	}
+	
+	public function setContentType($contenttype) {
+		$this->context['contenttype'] = $contenttype;
+	}
+	
+	public function setExtraHeader($key, $value) {
+		$this->extraheaders[$key] = $value;
+	}
+	
 	
 	protected function getHeaders($sessiontoken, $resourcearray) {
 		$context = $this->getApiContext();
@@ -84,9 +100,20 @@ class RestConnection {
 	
 		$headers = array();
 		$headers[] = 'sessiontoken:' .  (isset($sessiontoken) ? $sessiontoken : 'none');
-		$headers[] = 'accesstoken:' .  $accesstoken;
-		$headers[] = 'Accept: application/vnd.primus.v1+json';
-		$headers[] = 'Content-Type: application/vnd.primus.v1+json';
+		$headers[] = 'accesstoken:' .  (isset($accesstoken) ? $accesstoken : 'none');
+		
+		$accept = (isset($context['accept']) ? $context['accept'] : null);
+		$contenttype = (isset($context['contenttype']) ? $context['contenttype'] : null);
+		
+		$headers[] = 'Accept:'.(isset($accept) ? $accept : '');
+		$headers[] = 'Content-Type:'.(isset($contenttype) ? $contenttype : '');
+		
+		// extra headers
+		$extraheaders = $this->extraheaders;
+		
+		foreach($extraheaders as $key=>$value) {
+			$headers[] = $key.':'.$value;
+		}
 	
 		return $headers;
 	}

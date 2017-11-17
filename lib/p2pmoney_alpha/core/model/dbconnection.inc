@@ -4,13 +4,13 @@ namespace p2pmoney\common\core\model;
 use PDO;
 
 Class DbConnection {
-	public $database;
-	public $username;
-	public $password;
-	public $host;
-	public $port;
+	protected $database;
+	protected $username;
+	protected $password;
+	protected $host;
+	protected $port;
 	
-	public $tableprefix;
+	protected $tableprefix;
 	
 	private $PDO_Connection;
 	
@@ -25,26 +25,51 @@ Class DbConnection {
 		return $this->database;
 	}
 	
+	public function setName($dbname) {
+		$this->database = $dbname;
+	}
+	
 	public function getUserName() {
 		return $this->username;
+	}
+	
+	public function setUserName($username) {
+		$this->username = $username;
 	}
 	
 	public function getPassword() {
 		return $this->password;
 	}
 	
+	public function setPassword($password) {
+		$this->password = $password;
+	}
+	
 	public function getHost() {
 		return $this->host;
+	}
+	
+	public function setHost($host) {
+		$this->host = $host;
 	}
 	
 	public function getPort() {
 		return $this->port;
 	}
 	
+	public function setPort($port) {
+		$this->port = $port;
+	}
+	
 	public function getTablePrefix() {
 		return $this->tableprefix;
 	}
 	
+	public function setTablePrefix($tableprefix) {
+		$this->tableprefix = $tableprefix;
+	}
+	
+	// operations
 	public function isClosed() {
 		return $this->isClosed;
 	}

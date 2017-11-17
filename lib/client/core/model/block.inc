@@ -4,67 +4,120 @@ namespace ethereum_reader\rest_client\core\model;
 require_once('answerobject.inc');
 require_once('ethereumreaderserver.inc');
 
+require_once(dirname(__FILE__).'/./persistence/blockpersistor.inc');
 
 class Block extends AnswerObject {
-	// web3 members
+	
+	// api members
+	private $number;
+	private $hash;
+	private $parentHash;
+	private $uncleHash;
+	private $coinbase;
+	private $root;
+	private $txHash;
 	private $difficulty;
-	private $extraData;
 	private $gasLimit;
 	private $gasUsed;
-	private $hash;
-	private $logsBloom;
-	private $miner;
-	private $mixHash;
+	private $time;
+	private $extra;
+	private $mixDigest;
 	private $nonce;
-	private $number;
-	private $parentHash;
-	private $receiptsRoot;
-	private $sha3Uncles;
+	private $tx_count;
+	private $uncle_count;
 	private $size;
-	private $stateRoot;
-	private $timestamp;
+	private $blockTime;
+	private $reward;
+	private $totalFee;	
+	
 	private $totalDifficulty;
-	private $transactions;
+	
+	// web3 additionals
+	//private $difficulty;
+	//private $extraData;
+	//private $gasLimit;
+	//private $gasUsed;
+	//private $hash;
+	private $logsBloom;
+	private $mixHash;
+	//private $nonce;
+	//private $number;
+	//private $parentHash;
+	private $receiptsRoot;
+	//private $sha3Uncles;
+	//private $size;
+	//private $stateRoot;
+	//private $timestamp;
 	private $transactionsRoot;
+	
+	// arrays
+	private $transactions;
 	private $uncles;
 	
 	private function __construct ()	{
 	}
 	
-	private function init($data) {
+	protected function init($data) {
+		if ((isset($this->number) && $this->number != $data['number']))
+			return;
+		
+		$this->number = $data['number'];
+		$this->hash = $data['hash'];
+		$this->parentHash = $data['parentHash'];
+		$this->uncleHash = $data['uncleHash'];
+		$this->coinbase = $data['coinbase'];
+		$this->root = $data['root'];
+		$this->txHash = $data['txHash'];
 		$this->difficulty = $data['difficulty'];
-		$this->extraData = $data['extraData'];
 		$this->gasLimit = $data['gasLimit'];
 		$this->gasUsed = $data['gasUsed'];
-		$this->hash = $data['hash'];
-		$this->logsBloom = $data['logsBloom'];
-		$this->miner = $data['miner'];
-		$this->mixHash = $data['mixHash'];
+		$this->time = $data['time'];
+		$this->extra = $data['extra'];
+		$this->mixDigest = $data['mixDigest'];
 		$this->nonce = $data['nonce'];
-		$this->number = $data['number'];
-		$this->parentHash = $data['parentHash'];
-		$this->receiptsRoot = $data['receiptsRoot'];
-		$this->sha3Uncles = $data['sha3Uncles'];
+		$this->tx_count = $data['tx_count'];
+		$this->uncle_count = $data['uncle_count'];
 		$this->size = $data['size'];
-		$this->stateRoot = $data['stateRoot'];
-		$this->timestamp = $data['timestamp'];
+		$this->blockTime = $data['blockTime'];
+		
 		$this->totalDifficulty = $data['totalDifficulty'];
-		$this->transactions = $data['transactions'];
-		$this->transactionsRoot = $data['transactionsRoot'];
-		$this->uncles = $data['uncles'];
+		
+		$this->reward = $data['reward'];
+		$this->totalFee = $data['totalFee'];	
 		
 	}
 	
+	// get/set api members
 	public function getNumber() {
 		return $this->number;
 	}
 	
-	public function getDifficulty() {
-		return $this->difficulty;
+	public function getHash() {
+		return $this->hash;
 	}
 	
-	public function getExtraData() {
-		return $this->extraData;
+	public function getParentHash() {
+		return $this->parentHash;
+	}
+	
+	public function getUncleHash() {
+		return $this->uncleHash;
+	}
+	
+	public function getCoinBase() {
+		return $this->coinbase;
+	}
+	
+	public function getRoot() {
+		return $this->root;
+	}
+	
+	public function getTxHash() {
+		return $this->txHash;
+	}
+	
+	public function getDifficulty() {
+		return $this->difficulty;
 	}
 	
 	public function getGasLimit() {
@@ -75,62 +128,90 @@ class Block extends AnswerObject {
 		return $this->gasUsed;
 	}
 	
-	public function getHash() {
-		return $this->hash;
+	public function getTime() {
+		return $this->time;
 	}
 	
-	public function getLogsBloom() {
-		return $this->logsBloom;
+	public function getExtra() {
+		return $this->extra;
 	}
 	
-	public function getMiner() {
-		return $this->miner;
-	}
-	
-	public function getMixHash() {
-		return $this->mixHash;
+	public function getMixDigest() {
+		return $this->mixDigest;
 	}
 	
 	public function getNonce() {
 		return $this->nonce;
 	}
 	
-	public function getParentHash() {
-		return $this->parentHash;
+	public function getTxCount() {
+		return $this->tx_count;
 	}
 	
-	public function getReceiptsRoot() {
-		return $this->receiptsRoot;
-	}
-	
-	public function getSha3Uncles() {
-		return $this->sha3Uncles;
+	public function getUncleCount() {
+		return $this->uncle_count;
 	}
 	
 	public function getSize() {
 		return $this->size;
 	}
 	
-	public function getStateRoot() {
-		return $this->stateRoot;
+	public function getBlockTime() {
+		return $this->blockTime;
 	}
 	
-	public function getTimeStamp() {
-		return $this->timestamp;
+	public function getMiner() {
+		return $this->coinbase;
 	}
 	
 	public function getTotalDifficulty() {
 		return $this->totalDifficulty;
 	}
 	
-	public function getTransactionsRoot() {
-		return $this->transactionsRoot;
+	public function getReward() {
+		return $this->reward;
+	}
+	
+	public function getTotalFee() {
+		return $this->totalFee;
+	}
+	
+	
+	// persistence
+	public function read($data) {
+		$this->init($data);
+	}
+	
+	protected function create() {
+		
+	}
+	
+	public function save($perCon) {
+		
+		$persistor = new BlockPersistor($this, $perCon);
+		
+		$persistor->saveBlock();
+	}
+	
+	public function delete() {
+		
 	}
 	
 	// static part
-	static $lastblock;
+	static protected $lastblock;
 	
-	static public function getBlock($data) {
+	static public function getBlockFromNumber($blocknumber, $perCon) {
+		
+		$block = new Block();
+		$block->number = $blocknumber;
+		$persistor = new BlockPersistor($block, $perCon);
+		
+		$block = $persistor->readBlock();
+
+		return $block;
+	}
+	
+	static public function getBlockFromData($data) {
 		$block = new Block();
 		
 		$block->init($data);
