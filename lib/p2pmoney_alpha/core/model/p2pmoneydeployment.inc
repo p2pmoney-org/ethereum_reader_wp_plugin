@@ -72,7 +72,7 @@ class P2PMoneyAlphaDeployment {
 	}
 
 	// rest server code dir
-	static public function getRestServerodeDir() {
+	static public function getRestServerCodeDir() {
 		if (isset(P2PMoneyAlphaDeployment::$restservercodedir))
 			return P2PMoneyAlphaDeployment::$restservercodedir;
 		else

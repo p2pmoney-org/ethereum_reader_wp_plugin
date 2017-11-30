@@ -10,6 +10,10 @@ class Blocks extends AnswerObject {
 		return $this->block_array;
 	}
 	
+	public function getBlockCount() {
+		return count($this->block_array);
+	}
+	
 	public function addBlock($block) {
 		if (($block instanceof Block) === false)
 			return;

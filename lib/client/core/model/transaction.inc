@@ -114,6 +114,8 @@ class Transaction extends AnswerObject {
 		return $this->type;
 	}
 	
+	
+	
 	// persistence
 	public function read($data) {
 		$this->init($data);
@@ -130,10 +132,9 @@ class Transaction extends AnswerObject {
 		$persistor->saveTransaction();
 	}
 	
-	public function delete() {
+	public function delete($perCon) {
 	
 	}
-	
 	
 
 	// static functions
@@ -145,7 +146,7 @@ class Transaction extends AnswerObject {
 		return $transaction;
 	}
 	
-	static public function getTransactionFromHash($hash) {
+	static public function getTransactionFromHash($hash, $perCon) {
 		$transaction = new Transaction();
 		$transaction->hash = $hash;
 		
@@ -156,6 +157,37 @@ class Transaction extends AnswerObject {
 		return $transaction;
 	}
 	
+	static public function getTransactionsForAddress($address, $perCon) {
+		
+		$hashes = TransactionPersistor::getTransactionsHashForAddress($address, $perCon);
+		
+		if (!isset($hashes))
+			return;
+		
+		$transactions = new Transactions();
+		
+		foreach($hashes as $hash) {
+			$transaction = new Transaction();
+			$transaction->hash = $hash;
+			
+			$persistor = new TransactionPersistor($transaction, $perCon);
+			
+			$transaction = $persistor->readTransaction();
+				
+			if (isset($transaction))
+				$transactions->addTransaction($transaction);
+		}
+	
+		return $transactions;
+	}
+
+	static public function getLastTransactions($offset, $count, $perCon) {
+		return TransactionPersistor::getLastTransactions($offset, $count, $perCon);
+	}
+	
+	static public function getBlockRangeTransactions($startBlockNum, $endBlockNum, $perCon) {
+		return TransactionPersistor::getBlockRangeTransactions($startBlockNum, $endBlockNum, $perCon);
+	}
 	
 }
 

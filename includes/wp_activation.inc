@@ -82,7 +82,7 @@ function ethereum_reader_create_db_tables() {
 	  `LastModificationOn` timestamp NOT NULL,
 	  `InsertionDate` timestamp NOT NULL,
 	  `address` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-	  `balance` int(11) DEFAULT NULL,
+	  `balance` varchar(32) DEFAULT NULL,
 	  `nonce` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 	  `code` text COLLATE utf8mb4_unicode_ci,
 	  `name` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -91,6 +91,8 @@ function ethereum_reader_create_db_tables() {
 	  `transactioncount` int(11) DEFAULT NULL,
 	  `currentblocknumber` int(11) DEFAULT NULL,
 	  `new_blocks_seen` int(11) DEFAULT NULL,
+	  `firstscannedblock` int(11) DEFAULT NULL,
+	  `lastscannedblock` int(11) DEFAULT NULL,
 	  PRIMARY KEY (`id`),
 	  UNIQUE KEY `address` (`address`)
 	) $charset_collate;";

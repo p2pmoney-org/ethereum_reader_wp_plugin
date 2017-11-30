@@ -21,6 +21,12 @@ class Account extends AnswerObject {
 	private $currentblocknumber;
 	private $new_blocks_seen;
 	
+	private $firstscannedblock;
+	private $lastscannedblock;
+	
+	// transactions
+	private $transactions;
+	
 	private function __construct ()	{
 	}
 	
@@ -37,6 +43,17 @@ class Account extends AnswerObject {
 		
 		$this->currentblocknumber = $data['currentblocknumber'];
 		$this->new_blocks_seen = $data['new_blocks_seen'];
+		
+		$this->firstscannedblock = (isset($data['firstscannedblock']) ? $data['firstscannedblock'] : -1);
+		$this->lastscannedblock = (isset($data['lastscannedblock']) ? $data['lastscannedblock'] : -1);
+	}
+	
+	public function updateAccount($account) {
+		if (!($account instanceof Account))
+			return;
+		
+		$this->firstscannedblock = (isset($account->firstscannedblock) && ($account->firstscannedblock != -1) ? $account->firstscannedblock : $this->firstscannedblock);
+		$this->lastscannedblock = (isset($account->lastscannedblock) && ($account->lastscannedblock != -1) ? $account->lastscannedblock : $this->lastscannedblock);
 	}
 	
 	
@@ -72,12 +89,44 @@ class Account extends AnswerObject {
 		return $this->transactioncount;
 	}
 	
+	public function getTransactions($perCon) {
+		if (isset($this->transactions))
+			return $this->transactions;
+		
+		// we get identified transactions for this account
+		$address = $this->address;
+		$this->transactions = Transaction::getTransactionsForAddress($address, $perCon);
+			
+		return $this->transactions;
+	}
+	
+	public function addTransactions($transaction) {
+		// we could perfom a check if transactions belong to this account
+		$this->transactions->addTransactions($transactions);
+	}
+		
 	public function getCurrentBlockNumber() {
 		return $this->currentblocknumber;
 	}
 	
 	public function getNewBlocksSeen() {
 		return $this->new_blocks_seen;
+	}
+	
+	public function getFirstScannedBlock() {
+		return $this->firstscannedblock;
+	}
+	
+	public function setFirstScannedBlock($firstscannedblock) {
+		$this->firstscannedblock = $firstscannedblock;
+	}
+	
+	public function getLastScannedBlock() {
+		return $this->lastscannedblock;
+	}
+	
+	public function setLastScannedBlock($lastscannedblock) {
+		$this->lastscannedblock = $lastscannedblock;
 	}
 	
 	// persistence
@@ -96,7 +145,7 @@ class Account extends AnswerObject {
 		$persistor->saveAccount();
 	}
 	
-	public function delete() {
+	public function delete($perCon) {
 	
 	}
 	

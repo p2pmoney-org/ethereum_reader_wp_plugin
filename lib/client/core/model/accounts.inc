@@ -10,6 +10,10 @@ class Accounts extends AnswerObject {
 		return $this->account_array;
 	}
 	
+	public function getAccountCount() {
+		return count($this->account_array);
+	}
+	
 	public function addAccount($account) {
 		if (($account instanceof Account) === false)
 			return;

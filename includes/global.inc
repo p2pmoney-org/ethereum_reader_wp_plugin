@@ -42,6 +42,7 @@ else {
 	p2pmoney\common\core\model\P2PMoneyAlphaDeployment::setCommonCodeDir($ethereum_reader_Config['common_library_code_dir']);
 }
 	
+use ethereum_reader\rest_client\core\model\EthereumReaderServer;
 
 class ethereum_reader_Globals {
 
@@ -65,14 +66,14 @@ class ethereum_reader_Globals {
 		if (isset(ethereum_reader_Globals::$ethereum_reader_server))
 			return ethereum_reader_Globals::$ethereum_reader_server;
 		
-		ethereum_reader_Globals::$ethereum_reader_server = ethereum_reader\rest_client\core\model\EthereumReaderServer::getServer();	
+		ethereum_reader_Globals::$ethereum_reader_server = EthereumReaderServer::getServer();	
 		
 		$config = ethereum_reader_Globals::getConfigProperties();
 		
 		// rest connection to ethereum_reader_server
 		$configurl = (isset($config['eth_reader_rest_server_url']) ? $config['eth_reader_rest_server_url'] : 'http://ethreader.p2pmoney.org');
 		$domain = (isset($config['eth_reader_domain']) ? $config['eth_reader_domain'] : '/ethereum-reader/api');
-		$apikey = (isset($config['eth_reader_api_key']) ? $config['eth_reader_api_key'] : null);
+		$apikey = (isset($config['eth_reader_api_key']) ? $config['eth_reader_api_key'] : 'wordpress');
 		
 		ethereum_reader_Globals::$ethereum_reader_server->setRestConnectionUrl($configurl);
 		ethereum_reader_Globals::$ethereum_reader_server->setRestDomain($domain);
@@ -93,6 +94,36 @@ class ethereum_reader_Globals {
 		ethereum_reader_Globals::$ethereum_reader_server->setDBPort($port);
 		ethereum_reader_Globals::$ethereum_reader_server->setDBTablePrefix($table_prefix);
 		
+		// enable DB caching
+		
+		// for saving to DB
+		$bCacheSaveToDB = (isset($config['eth_reader_db_caching_save']) && ($config['eth_reader_db_caching_save'] == 0) ? false : true);
+		
+		ethereum_reader_Globals::$ethereum_reader_server->setCacheSaveToDB($bCacheSaveToDB);
+		
+		$iCacheSaveMode = (isset($config['eth_reader_db_caching_save_all']) && ($config['eth_reader_db_caching_save_all'] == 1) ? EthereumReaderServer::CACHE_SAVE_ALL : EthereumReaderServer::CACHE_SAVE_TX_FOR_KNOWN_ACCOUNTS | EthereumReaderServer::CACHE_SAVE_BLOCKS_FOR_KNOWN_TX);
+		ethereum_reader_Globals::$ethereum_reader_server->setCacheSaveToDBMode($iCacheSaveMode);
+		
+		// for reading from DB
+		$bCacheReadFromDB = (isset($config['eth_reader_db_caching_read']) && ($config['eth_reader_db_caching_read'] == 0) ? false : true);
+		
+		ethereum_reader_Globals::$ethereum_reader_server->setCacheReadFromDB($bCacheReadFromDB);
+		
+		$iCacheReadMode = (isset($config['eth_reader_db_caching_read_all']) && ($config['eth_reader_db_caching_read_all'] == 1) ? EthereumReaderServer::CACHE_READ_ALL : 0);
+		ethereum_reader_Globals::$ethereum_reader_server->setCacheSaveToDBMode($iCacheSaveMode);
+		
+		ethereum_reader_Globals::logString('***************************************************************************');
+		ethereum_reader_Globals::logString('Initializing EthereumReaderServer');
+		ethereum_reader_Globals::logString('Rest server url is                 :'.$configurl);
+		ethereum_reader_Globals::logString('Rest server domain is              :'.$domain);
+		ethereum_reader_Globals::logString('DB Name is                         :'.$database);
+		ethereum_reader_Globals::logString('DB User is                         :'.$username);
+		ethereum_reader_Globals::logString('DB table prefix is                 :'.$table_prefix);
+		ethereum_reader_Globals::logString('Cache Save to DB is                :'.($bCacheSaveToDB ? 'true' : 'false'));
+		ethereum_reader_Globals::logString('Cache Save mode is                 :'.$iCacheSaveMode);
+		ethereum_reader_Globals::logString('Cache Read from DB is              :'.($bCacheReadFromDB ? 'true' : 'false'));
+		ethereum_reader_Globals::logString('Cache Read mode is                 :'.$iCacheReadMode);
+		ethereum_reader_Globals::logString('***************************************************************************');
 		
 		return ethereum_reader_Globals::$ethereum_reader_server;
 	}
@@ -109,5 +140,51 @@ class ethereum_reader_Globals {
 		// return global array
 		return getConfigProperties();
 	}
-
+	
+	static public function getPageBaseURL() {
+		$pageURL = 'http';
+		if ($_SERVER["HTTPS"] == "on") {
+			$pageURL .= "s";
+		}
+		$pageURL .= "://";
+		if ($_SERVER["SERVER_PORT"] != "80") {
+			$pageURL .= $_SERVER["SERVER_NAME"] . ":" .
+					$_SERVER["SERVER_PORT"] . strtok($_SERVER["REQUEST_URI"],'?');
+		} else {
+			$pageURL .= $_SERVER["SERVER_NAME"] . strtok($_SERVER["REQUEST_URI"],'?');
+		}
+		return $pageURL;
+	}	
+	
+	static public function getCurrentPageUrl($strip = null) {
+	
+		$baseurl = ethereum_reader_Globals::getPageBaseURL();
+	
+		$querystring = $_SERVER['QUERY_STRING'];
+		parse_str($querystring, $queryarray);
+	
+		if (isset($strip)) {
+			// remove
+			foreach($strip as $key=>$value) {
+				if (isset($queryarray[$value]))
+					unset($queryarray[$value]);
+			}
+	
+			// rebuild the stripped query string
+			foreach( $queryarray as $key => $key_value ){
+				//$queryarr[] = urlencode( $key ) . '=' . urlencode( $key_value );
+				$queryarr[] = $key . '=' . $key_value;
+			}
+	
+			if (isset($queryarr))
+				$querystring = implode( '&', $queryarr );
+			else
+				$querystring = '';
+				
+		}
+	
+		return add_query_arg( $querystring, '', $baseurl);
+	}
+	
+	
 }

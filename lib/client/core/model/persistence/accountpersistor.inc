@@ -6,9 +6,9 @@ use p2pmoney\common\core\model\P2PMoneyAlphaGlobals;
 
 
 class AccountPersistor {
-	private $perCon;
+	protected $perCon;
 	
-	private $account;
+	protected $account;
 	
 	public function __construct(&$account, $perCon) {
 		
@@ -49,7 +49,7 @@ class AccountPersistor {
 		// DB formatting
 		$address = '"'.strtolower($this->account->getAddress()).'"';
 		
-		$balance = ( $this->account->getBalance() !== null ? $this->account->getBalance() : "NULL");
+		$balance = ( $this->account->getBalance() !== null ? '"'.$this->account->getBalance().'"' : "NULL");
 		$nonce = ($this->account->getNonce() !== null ? '"'.$this->account->getNonce().'"' : "NULL");
 		$code = ($this->account->getCode() !== null ? '"'.$this->account->getCode().'"' : "NULL");
 		$name = ($this->account->getName() !== null ? '"'.$this->account->getName().'"' : "NULL");
@@ -59,6 +59,9 @@ class AccountPersistor {
 		
 		$currentblocknumber = ($this->account->getCurrentBlockNumber() !== null ? $this->account->getCurrentBlockNumber() : "NULL");
 		$new_blocks_seen = ($this->account->getNewBlocksSeen() !== null ? $this->account->getNewBlocksSeen() : "NULL");
+		
+		$firstscannedblock = ($this->account->getFirstScannedBlock() !== null ? $this->account->getFirstScannedBlock() : "NULL");
+		$lastscannedblock = ($this->account->getLastScannedBlock() !== null ? $this->account->getLastScannedBlock() : "NULL");
 		
 		// DB fields
 		$specials = $this->readDBSpecials();
@@ -88,7 +91,9 @@ class AccountPersistor {
 					transactioncount=".$transactioncount.",
 							
 					currentblocknumber=".$currentblocknumber.",
-					new_blocks_seen=".$new_blocks_seen."
+					new_blocks_seen=".$new_blocks_seen.",
+					firstscannedblock=".$firstscannedblock.",
+					lastscannedblock=".$lastscannedblock."
 							
 			WHERE id=".$id.";";
 		}
@@ -110,7 +115,9 @@ class AccountPersistor {
 					transactioncount,
 							
 					currentblocknumber,
-					new_blocks_seen
+					new_blocks_seen,
+					firstscannedblock,
+					lastscannedblock
 					
 					)
 					VALUES(
@@ -128,7 +135,9 @@ class AccountPersistor {
 					".$transactioncount.",
 							
 					".$currentblocknumber.",
-					".$new_blocks_seen."
+					".$new_blocks_seen.",
+					".$firstscannedblock.",
+					".$lastscannedblock."
 					);";
 		}
 		
@@ -229,6 +238,9 @@ class AccountPersistor {
 			$data['currentblocknumber'] = $dbCon->getField($result, $i,'currentblocknumber');
 			$data['new_blocks_seen'] = $dbCon->getField($result, $i,'new_blocks_seen');
 				
+			$data['firstscannedblock'] = $dbCon->getField($result, $i,'firstscannedblock');
+			$data['lastscannedblock'] = $dbCon->getField($result, $i,'lastscannedblock');
+
 			$account->read($data);
 		}
 		else {

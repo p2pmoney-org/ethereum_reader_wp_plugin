@@ -6,6 +6,9 @@ require_once('ethereumreaderserver.inc');
 
 require_once(dirname(__FILE__).'/./persistence/blockpersistor.inc');
 
+use p2pmoney\common\core\model\P2PMoneyAlphaGlobals;
+
+
 class Block extends AnswerObject {
 	
 	// api members
@@ -85,6 +88,34 @@ class Block extends AnswerObject {
 		$this->reward = $data['reward'];
 		$this->totalFee = $data['totalFee'];	
 		
+	}
+	
+	public function getData() {
+		$data['number'] = $this->number;
+		$data['hash'] = $this->hash;
+		$data['parentHash'] = $this->parentHash;
+		$data['uncleHash'] = $this->uncleHash;
+		$data['coinbase'] = $this->coinbase;
+		$data['root'] = $this->root;
+		$data['txHash'] = $this->txHash;
+		$data['difficulty'] = $this->difficulty;
+		$data['gasLimit'] = $this->gasLimit;
+		$data['gasUsed'] = $this->gasUsed;
+		$data['time'] = $this->time;
+		$data['extra'] = $this->extra;
+		$data['mixDigest'] = $this->mixDigest;
+		$data['nonce'] = $this->nonce;
+		$data['tx_count'] = $this->tx_count;
+		$data['uncle_count'] = $this->uncle_count;
+		$data['size'] = $this->size;
+		$data['blockTime'] = $this->blockTime;
+		
+		$data['totalDifficulty'] = $this->totalDifficulty;
+		
+		$data['reward'] = $this->reward;
+		$data['totalFee'] = $this->totalFee;
+		
+		return $data;
 	}
 	
 	// get/set api members
@@ -193,12 +224,11 @@ class Block extends AnswerObject {
 		$persistor->saveBlock();
 	}
 	
-	public function delete() {
+	public function delete($perCon) {
 		
 	}
 	
 	// static part
-	static protected $lastblock;
 	
 	static public function getBlockFromNumber($blocknumber, $perCon) {
 		
@@ -219,13 +249,13 @@ class Block extends AnswerObject {
 		return $block;
 	}
 	
-	static public function getLastBlockNumber() {
-		if (isset(Block::$lastblock))
-			return Block::$lastblock;
+	static public function getLastBlockNumber($perCon) {
+		return BlockPersistor::getLastBlockNumber($perCon);
 		
-		Block::$lastblock = EthereumReaderServer::getServer()->getBlocksCount();
-		
-		return Block::$lastblock;
+	}
+	
+	static public function getBlockRange($startBlockNum, $endBlockNum, $perCon) {
+		return BlockPersistor::getBlockRange($startBlockNum, $endBlockNum, $perCon);
 	}
 	
 	

@@ -24,8 +24,9 @@ class RestConnection {
 		$context['base_url'] = $this->context['base_url'];
 		$context['access_token'] = $this->context['access_token'];
 		$context['domain'] = $this->context['domain'];
-		$context['accept'] = $this->context['accept'];
-		$context['contenttype'] = $this->context['contenttype'];
+		
+		$context['accept'] = (isset($this->context['accept']) ? $this->context['accept'] : null);
+		$context['contenttype'] = (isset($this->context['contenttype'])  ? $this->context['contenttype'] : null);;
 		
 		return $context;
 	}

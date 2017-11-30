@@ -310,21 +310,38 @@ class P2PMoneyAlphaGlobals {
 		P2PMoneyAlphaGlobals::$error_log_file = $path;
 	}
 	
+	static private $bCanLog;
+	
 	static public function logString($string) {
 		$bLogString = false;
-
+		
+		if ((isset(P2PMoneyAlphaGlobals::$bCanLog)) && (P2PMoneyAlphaGlobals::$bCanLog == false)) {
+			return;
+		}
+		
+		// define log path
 		if (isset(P2PMoneyAlphaGlobals::$error_log_file)) {
-			$bLogString = true;
 			$file_log = P2PMoneyAlphaGlobals::$error_log_file;
 		}
 		else {
 			$file_log = P2PMoneyAlphaDeployment::getModuleDataDir('p2pmoney_alpha').'/files/logs/p2pmoney_alpha_error.log';
-			
+		}
+		
+		if ((isset(P2PMoneyAlphaGlobals::$bCanLog))) {
+			$bLogString = true;
+		}
+		else {
+			// check now if we can actually log
 			if (file_exists($file_log)) {
 				$bLogString = true;
+				P2PMoneyAlphaGlobals::$bCanLog = true;
 			}
-			
+			else {
+				$bLogString = false;
+				P2PMoneyAlphaGlobals::$bCanLog = false;
+			}
 		}
+			
 		
 		if ($bLogString) {
 			$logstring = date("c", time()).": ".$string.PHP_EOL;
