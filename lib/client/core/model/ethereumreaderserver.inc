@@ -130,12 +130,12 @@ class EthereumReaderServer {
 	}
 	
 	public function readTxForKnownAccountsToDB() {
-	if (!$this->getCacheReadFromDB())
-		return false;
-	
-	if ($this->readAllFromDB())
-			return true;
+		if (!$this->getCacheReadFromDB())
+			return false;
 		
+		if ($this->readAllFromDB())
+				return true;
+			
 		if (isset($this->iCacheReadMode))
 			return ($this->iCacheReadMode & EthereumReaderServer::CACHE_READ_TX_FOR_KNOWN_ACCOUNTS ? true : false);
 		

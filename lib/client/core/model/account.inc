@@ -121,6 +121,10 @@ class Account extends AnswerObject {
 	
 	public function addTransactions($transaction) {
 		// we could perfom a check if transactions belong to this account
+		if (!isset($this->transactions)) {
+			$this->transactions = new Transactions();
+		}
+		
 		$this->transactions->addTransactions($transactions);
 	}
 		

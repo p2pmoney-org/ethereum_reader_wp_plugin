@@ -111,7 +111,7 @@ class ethereum_reader_Globals {
 		
 		ethereum_reader_Globals::$ethereum_reader_server->setCacheReadFromDB($bCacheReadFromDB);
 		
-		$iCacheReadMode = (isset($config['eth_reader_db_caching_read_all']) && ($config['eth_reader_db_caching_read_all'] == 1) ? EthereumReaderServer::CACHE_READ_ALL : 0);
+		$iCacheReadMode = (isset($config['eth_reader_db_caching_read_all']) && ($config['eth_reader_db_caching_read_all'] == 1) ? EthereumReaderServer::CACHE_READ_ALL : EthereumReaderServer::CACHE_READ_TX_FOR_KNOWN_ACCOUNTS);
 		ethereum_reader_Globals::$ethereum_reader_server->setCacheReadFromDBMode($iCacheReadMode);
 		
 		ethereum_reader_Globals::logString('***************************************************************************');

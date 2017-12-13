@@ -5,6 +5,7 @@ require_once('view_context.inc');
 
 use p2pmoney\common\core\model\P2PMoneyAlphaGlobals;
 use ethereum_reader\rest_client\core\model\EthereumReaderServer;
+use ethereum_reader\rest_client\core\model\Transactions;
 
 class AccountView {
 	private $styles;
@@ -162,19 +163,24 @@ class AccountView {
 		
 		
 		// list of transactions
+		$blockchaintxcount = $account->getTransactionCount();
+		$accnttxscount = 0;
+		$highestscannedblock = $account->getLastScannedBlock();
+		$lowestscannedblock = $account->getFirstScannedBlock();
+		
+		
+		
 		$accounttransactions = $ethereumserver->getAccountTransactions($address);
 	
 		// sort on descending date and index
-		if ($accounttransactions->getTransactionCount() > 1)
+		if ((isset($accounttransactions)) && ($accounttransactions->getTransactionCount() > 1)) {
 			$accounttransactions->sort(-1);
+			$accnttxscount = $accounttransactions->getTransactionCount();
+		}
 	
 		// list of transactions
 		$widget .= '<div'.(isset($styles['txs_list']) ? ' style=\''.$styles['txs_list'].'\'' : ' style=\'txs_list\'').'>';
 		
-		$blockchaintxcount = $account->getTransactionCount();
-		$accnttxscount = $accounttransactions->getTransactionCount();
-		$highestscannedblock = $account->getLastScannedBlock();
-		$lowestscannedblock = $account->getFirstScannedBlock();
 		
 		$widget .= 'account has '.$blockchaintxcount.' transactions in the blockchain.<br>';
 		
@@ -182,7 +188,7 @@ class AccountView {
 			$widget .= 'scan between blocks '.$lowestscannedblock.' and '.$highestscannedblock.' has found '.$accnttxscount.'  transactions so far.<br>';
 		}
 		else {
-			$widget .= 'scan has not found any transaction for this account yet.<br>';
+			$widget .= 'scan has not found any transaction for this account yet (scanned '.$lowestscannedblock.' to '.$highestscannedblock.').<br>';
 		}
 				
 		
@@ -196,7 +202,12 @@ class AccountView {
 		$numberofpages = intval(($accnttxscount - 1) / $pagesize) + 1;
 		
 		// transactions for current page
-		$transactions = $accounttransactions->getTransactionRange($pagenumber * $pagesize, ($pagenumber * $pagesize) + ($pagesize - 1));
+		if (isset($accounttransactions)) {
+			$transactions = $accounttransactions->getTransactionRange($pagenumber * $pagesize, ($pagenumber * $pagesize) + ($pagesize - 1));
+		}
+		else {
+			$transactions = new Transactions();
+		}
 		
 		$txscount = $transactions->getTransactionCount();
 		//$widget .= 'showing '.$txscount.'  transactions.<br>';
