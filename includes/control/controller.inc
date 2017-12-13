@@ -2,6 +2,7 @@
 require_once(dirname(__FILE__) . '/../view/views_styles.inc');
 
 
+use ethereum_reader\rest_client\core\view\ViewContext;
 use ethereum_reader\rest_client\core\view\AccountView;
 
 class ethereum_reader_Controller {
@@ -15,8 +16,14 @@ class ethereum_reader_Controller {
 		
 		// overloading styles
 		$accountviewstyles = ethereum_reader_views_styles::getAccountViewStyles();
-		if (isset($accountviewstyles))
+		if (isset($accountviewstyles)) {
 			$accountview->setStyles($accountviewstyles);
+			
+			if ($viewcontext->getClientDevice() == ViewContext::MOBILE_CLIENT) {
+				// we could potentially call a setAccounMobileViewStyles(&$accountviewstyles);
+				// to overload styles for mobile devices
+			}
+		}
 		
 		
 			// display the widget corresponding to the view requested

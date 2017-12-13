@@ -12,7 +12,17 @@ function ethereum_reader_getAccountInfo($attrs = [], $content = null) {
 	ethereum_reader_Globals::logString('$attrs is '.print_r($attrs, true));
 	
 	// get info for this account
-	$ethereumserver = ethereum_reader_Globals::getEthereumReaderServer(); // initialize, if necessary, rest connection
+	
+	// get ethereum reader server
+	try {
+		$ethereumserver = ethereum_reader_Globals::getEthereumReaderServer(); // initialize, if necessary, rest connection
+		
+	}
+	catch(Exception $e) {
+		$content = '<div>Exception has occured: '.$e->getMessage().'</div>';
+		
+		return $content;
+	}
 	
 	$address = $attrs['address'];
 	
@@ -33,6 +43,10 @@ function ethereum_reader_getAccountInfo($attrs = [], $content = null) {
 	
 	$viewcontext->setRequestedView($view);
 	$viewcontext->setPageNumber($page);
+	
+	if (wp_is_mobile()) {
+		$viewcontext->setClientDevice(ViewContext::MOBILE_CLIENT);
+	}
 	
 	// ask the view from the controller
 	$content = ethereum_reader_Controller::getAccountView($viewcontext, $ethereumserver, $account);

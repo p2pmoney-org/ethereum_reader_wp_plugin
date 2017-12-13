@@ -6,6 +6,8 @@ use p2pmoney\common\core\model\P2PMoneyAlphaGlobals;
 use p2pmoney\common\core\model\RestConnection;
 use p2pmoney\common\core\model\DBConnection;
 
+use Exception;
+
 require_once(P2PMoneyAlphaDeployment::getCommonCodeDir().'/p2pmoney_alpha/core/model/restconnection.inc');
 require_once(P2PMoneyAlphaDeployment::getCommonCodeDir().'/p2pmoney_alpha/core/model/dbconnection.inc');
 
@@ -15,6 +17,8 @@ require_once('transactions.inc');
 require_once('accounts.inc');
 
 class EthereumReaderServer {
+	
+	const REQUIRED_REST_SERVER_VERSION = '0.1.0';
 
 	private static $server;
 	
@@ -35,6 +39,11 @@ class EthereumReaderServer {
 	const CACHE_SAVE_TX_FOR_KNOWN_ACCOUNTS = 2;
 	const CACHE_SAVE_BLOCKS_FOR_KNOWN_TX = 4;
 	
+	// public constructor if we need to construct a second instance
+	// we different parameters (like url or db caching)
+	public function __construct() {
+	}
+	
 	
 	public function getCacheSaveToDB() {
 		if (!isset($this->bCacheSaveToDB))
@@ -52,6 +61,9 @@ class EthereumReaderServer {
 	}
 	
 	public function saveTxForKnownAccountsToDB() {
+		if (!$this->getCacheSaveToDBMode())
+			return false;
+		
 		if (isset($this->iCacheSaveMode))
 			return ($this->iCacheSaveMode & EthereumReaderServer::CACHE_SAVE_TX_FOR_KNOWN_ACCOUNTS ? true : false);
 		
@@ -59,6 +71,9 @@ class EthereumReaderServer {
 	}
 	
 	public function saveBlocksForKnownTxToDB() {
+		if (!$this->getCacheSaveToDBMode())
+			return false;
+		
 		if (isset($this->iCacheSaveMode))
 			return ($this->iCacheSaveMode & EthereumReaderServer::CACHE_SAVE_BLOCKS_FOR_KNOWN_TX ? true : false);
 		
@@ -66,6 +81,9 @@ class EthereumReaderServer {
 	}
 	
 	public function saveAllToDB() {
+		if (!$this->getCacheSaveToDBMode())
+			return false;
+		
 		if (isset($this->iCacheSaveMode))
 			return ($this->iCacheSaveMode & EthereumReaderServer::CACHE_SAVE_ALL ? true : false);
 		
@@ -82,6 +100,7 @@ class EthereumReaderServer {
 	private $iCacheReadMode;
 	
 	const CACHE_READ_ALL = 1;
+	const CACHE_READ_TX_FOR_KNOWN_ACCOUNTS = 2;
 	
 	public function getCacheReadFromDB() {
 		if (!isset($this->bCacheReadFromDB))
@@ -101,9 +120,25 @@ class EthereumReaderServer {
 	
 	
 	public function readAllFromDB() {
+		if (!$this->getCacheReadFromDB())
+			return false;
+	
 		if (isset($this->iCacheReadMode))
 			return ($this->iCacheReadMode & EthereumReaderServer::CACHE_READ_ALL ? true : false);
 	
+		return false;
+	}
+	
+	public function readTxForKnownAccountsToDB() {
+	if (!$this->getCacheReadFromDB())
+		return false;
+	
+	if ($this->readAllFromDB())
+			return true;
+		
+		if (isset($this->iCacheReadMode))
+			return ($this->iCacheReadMode & EthereumReaderServer::CACHE_READ_TX_FOR_KNOWN_ACCOUNTS ? true : false);
+		
 		return false;
 	}
 	
@@ -258,6 +293,34 @@ class EthereumReaderServer {
 		$this->ethrestcon = $connection;
 	}
 	
+	private $bServerOK;
+	private $checkErrorMessage;
+	
+	public function checkServer() {
+		if (isset($this->bServerOK)) {
+			
+			if ($this->bServerOK) {
+				return $this->bServerOK;
+			}
+			else {
+				throw new Exception($this->checkErrorMessage);
+			}
+			
+		}
+		
+		$versionanswerobject = $this->getVersionSupportInfoAnswerObject();
+		
+		$bHas = $versionanswerobject->has(EthereumReaderServer::REQUIRED_REST_SERVER_VERSION);
+		
+		if (!$bHas) {
+			$this->bServerOK = false;
+			$this->checkErrorMessage = 'remote server at '.$this->resturl.' does not support required version '.EthereumReaderServer::REQUIRED_REST_SERVER_VERSION;
+			throw new Exception($this->checkErrorMessage);
+		}
+		
+		$this->bServerOK = true;
+	}
+	
 	// rest api
 	
 	// version
@@ -340,11 +403,18 @@ class EthereumReaderServer {
 	
 		$answerobject->setJsonAnswer($jsonanswer);
 	
-		if (isset($decoded) && (isset($decoded['data']))  && (isset($decoded['data'][0]))) {
-			$data = $decoded['data'][0];
+		if (isset($decoded) && (isset($decoded['data'])) ) {
+			$i = 0;
+			
+			while (isset($decoded['data'][$i])) {
+				$data = $decoded['data'][$i];
 				
-			foreach($data as $key=>$value) {
-				$answerobject->add($key, $value);
+				foreach($data as $key=>$value) {
+					$answerobject->add($key.$i, $value);
+					
+					$i++;
+				}
+				
 			}
 		}
 	
@@ -450,7 +520,7 @@ class EthereumReaderServer {
 		if (!$this->getCacheSaveToDB())
 			return;
 		
-		$this->logString('EthereumReader::saveAccounts called');
+		$this->logString('EthereumReaderServer::saveAccounts called');
 		
 		$dbCon = $this->getDBConnection();
 		
@@ -736,7 +806,7 @@ class EthereumReaderServer {
 		$transactioncount = $account->getTransactionCount();
 
 		
-		if ($this->getCacheReadFromDB()) {
+		if ($this->readTxForKnownAccountsToDB()) {
 			$this->logString('searching in cache transactions for address['.$address.']');
 			$dbCon = $this->getDBConnection();
 			
@@ -836,6 +906,7 @@ class EthereumReaderServer {
 			if ($cnt > 0) {
 				$this->logString('found '.$cnt.' new transactions for account '.$address.' beween '.$fromblock.' and '.$toblock.' blocks.');
 				
+				if ($this->saveTxForKnownAccountsToDB())
 				$this->saveTransactions($transactions);
 					
 				// add to account transactions
@@ -906,7 +977,7 @@ class EthereumReaderServer {
 	}
 	
 	public function getBlock($blocknumber) {
-		$this->logString('EthereumReader::getBlock called for block '.$blocknumber);
+		$this->logString('EthereumReaderServer::getBlock called for block '.$blocknumber);
 	
 		if ($this->getCacheReadFromDB()) {
 			$this->logString('searching in cache block number '.$blocknumber);
@@ -959,7 +1030,7 @@ class EthereumReaderServer {
 	
 	
 	public function getBlockTransactions($blocknumber) {
-		$this->logString('EthereumReader::getBlockTransactions called for block '.$blocknumber);
+		$this->logString('EthereumReaderServer::getBlockTransactions called for block '.$blocknumber);
 		
 		// we could use the /block/:id/txs rest call as well
 		return EthereumReaderServer::getBlockRangeTransactions($blocknumber, $blocknumber);
@@ -1016,16 +1087,13 @@ class EthereumReaderServer {
 		if (!$this->getCacheSaveToDB())
 			return;
 		
-		if ($this->saveBlocksForKnownTxToDB())
-			return;
-		
-		$this->logString('EthereumReader::saveBlocks called');
+		$this->logString('EthereumReaderServer::saveBlocks called');
 			
 		$dbCon = $this->getDBConnection();
 		
 		$blocksarray = $blocks->getBlockArray();
 		
-		$this->logString('EthereumReader::saveBlocks block array size '.count($blocksarray));
+		$this->logString('EthereumReaderServer::saveBlocks block array size '.count($blocksarray));
 		
 		foreach($blocksarray as $block) {
 			//see if we can find the block in the database
@@ -1046,7 +1114,7 @@ class EthereumReaderServer {
 	}
 	
 	public function getLastBlocks($offset, $count) {
-		$this->logString('EthereumReader::getLastBlocks called for offset '.$offset.' count '.$count);
+		$this->logString('EthereumReaderServer::getLastBlocks called for offset '.$offset.' count '.$count);
 		$this->logString('cache save to db '.$this->getCacheSaveToDB().' save all '.$this->readAllFromDB());
 		
 		if (($this->getCacheReadFromDB()) && ($this->readAllFromDB())) {
@@ -1118,6 +1186,7 @@ class EthereumReaderServer {
 			}
 		}
 		
+		if ($this->saveAllToDB())
 		$this->saveBlocks($blocks);
 		
 			
@@ -1125,9 +1194,9 @@ class EthereumReaderServer {
 	}
 	
 	public function getBlockRange($startBlockNum, $endBlockNum) {
-		$this->logString('EthereumReader::getBlockRange called for start '.$startBlockNum.' to '.$endBlockNum);
+		$this->logString('EthereumReaderServer::getBlockRange called for start '.$startBlockNum.' to '.$endBlockNum);
 		
-		if (($this->getCacheReadFromDB()) && ($this->readAllFromDB())) {
+		if ($this->readAllFromDB()) {
 			$this->logString('searching in cache blocks from '.$startBlockNum.' to '.$endBlockNum);
 				
 			// get last block on distant host
@@ -1193,6 +1262,7 @@ class EthereumReaderServer {
 			}
 		}
 		
+		if ($this->saveAllToDB())
 		$this->saveBlocks($blocks);
 		
 			
@@ -1200,9 +1270,9 @@ class EthereumReaderServer {
 	}
 	
 	public function getBlockRangeTransactions($startBlockNum, $endBlockNum) {
-		$this->logString('EthereumReader::getBlockRangeTransactions called for start '.$startBlockNum.' to '.$endBlockNum);
+		$this->logString('EthereumReaderServer::getBlockRangeTransactions called for start '.$startBlockNum.' to '.$endBlockNum);
 		
-		if (($this->getCacheReadFromDB()) && ($this->readAllFromDB())) {
+		if ($this->readAllFromDB()) {
 			$this->logString('searching in cache transactions for blocks from '.$startBlockNum.' to '.$endBlockNum);
 				
 			$dbCon = $this->getDBConnection();
@@ -1230,7 +1300,7 @@ class EthereumReaderServer {
 		
 		$service_url = $restCon->getServiceUrl($resource);
 		
-		$this->logString('EthereumReaderServer::getBlockRange called, service url is '.$service_url);
+		$this->logString('EthereumReaderServer::getBlockRangeTransactions called, service url is '.$service_url);
 		
 		// GET curl call
 		$expectedhttpcode = '200';
@@ -1264,6 +1334,7 @@ class EthereumReaderServer {
 			}
 		}
 		
+		if ($this->saveAllToDB())
 		$this->saveTransactions($transactions);
 		
 			
@@ -1288,9 +1359,9 @@ class EthereumReaderServer {
 	}
 	
 	public function getTransaction($hash) {
-		$this->logString('EthereumReader::getTransaction called for hash '.$hash);
+		$this->logString('EthereumReaderServer::getTransaction called for hash '.$hash);
 	
-		if ($this->getCacheReadFromDB()) {
+		if ($this->readAllFromDB()) {
 			$this->logString('searching in cache transaction with hash '.$hash);
 			
 			// first look in cache if we do it
@@ -1346,13 +1417,13 @@ class EthereumReaderServer {
 		if (!$this->getCacheSaveToDB())
 			return;
 		
-		$this->logString('EthereumReader::saveTransactions called');
+		$this->logString('EthereumReaderServer::saveTransactions called');
 		
 		$dbCon = $this->getDBConnection();
 		
 		$transactionsarray = $transactions->getTransactionArray();
 		
-		$this->logString('EthereumReader::saveTransactions transaction array size '.count($transactionsarray));
+		$this->logString('EthereumReaderServer::saveTransactions transaction array size '.count($transactionsarray));
 		
 		foreach($transactionsarray as $transaction) {
 			//see if we can find the block in the database
@@ -1379,16 +1450,23 @@ class EthereumReaderServer {
 					if (!isset($senderaccount)) {
 						$senderaccount = $this->getAccount($senderaddress); // will save account because saveAllToDB
 					}
+					else {
+						$this->logString('found in cache sender account '.$senderaddress);
+					}
 									
 					if (!isset($recipientaccount)) {
 						$recipientaccount = $this->getAccount($recipientaddress); // will save account because saveAllToDB
 					}
-					
+					else {
+						$this->logString('found in cache recipient account '.$recipientaddress);
+					}
+						
 					// corresponding block
 					$savedblock = Block::getBlockFromNumber($blocknumber, $dbCon);
 					
-					if (!isset($savedblock))
-					$bSaveBlock = true;
+					if (!isset($savedblock)) {
+						$bSaveBlock = true;
+					}
 				}
 				else {
 					if ($this->saveTxForKnownAccountsToDB()) {
@@ -1424,7 +1502,7 @@ class EthereumReaderServer {
 			}
 			else {
 				// maybe we could check if transaction needs to be re-written
-				$this->logString('transaction read is '.print_r($savedtransaction, true));
+				$this->logString('found in cache transaction '.$txhash); //read is '.print_r($savedtransaction, true));
 			}
 				
 		}
@@ -1432,9 +1510,9 @@ class EthereumReaderServer {
 	}
 	
 	public function getLastTransactions($offset, $count) {
-		$this->logString('EthereumReader::getLastTransactions called with offset '.$offset.' and count '.$offset);
+		$this->logString('EthereumReaderServer::getLastTransactions called with offset '.$offset.' and count '.$offset);
 			
-		if (($this->getCacheReadFromDB()) && ($this->readAllFromDB())) {
+		if ($this->readAllFromDB()) {
 			$this->logString('searching in cache transactions with offset '.$offset.' and count '.$offset);
 				
 			// get last block on distant host
@@ -1501,6 +1579,7 @@ class EthereumReaderServer {
 			}
 		}
 		
+		if ($this->saveAllToDB())
 		$this->saveTransactions($transactions);
 		
 			

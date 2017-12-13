@@ -63,15 +63,17 @@ class ethereum_reader_Globals {
 	static private $ethereum_reader_server;
 	
 	static public function getEthereumReaderServer() {
-		if (isset(ethereum_reader_Globals::$ethereum_reader_server))
+		if (isset(ethereum_reader_Globals::$ethereum_reader_server)) {
+			if (ethereum_reader_Globals::$ethereum_reader_server->checkServer()) // throws exception if not ok
 			return ethereum_reader_Globals::$ethereum_reader_server;
+		}
 		
 		ethereum_reader_Globals::$ethereum_reader_server = EthereumReaderServer::getServer();	
 		
 		$config = ethereum_reader_Globals::getConfigProperties();
 		
 		// rest connection to ethereum_reader_server
-		$configurl = (isset($config['eth_reader_rest_server_url']) ? $config['eth_reader_rest_server_url'] : 'http://ethreader.p2pmoney.org');
+		$configurl = (isset($config['eth_reader_rest_server_url']) ? $config['eth_reader_rest_server_url'] : 'http://eth-api.p2pmoney.org');
 		$domain = (isset($config['eth_reader_domain']) ? $config['eth_reader_domain'] : '/ethereum-reader/api');
 		$apikey = (isset($config['eth_reader_api_key']) ? $config['eth_reader_api_key'] : 'wordpress');
 		
@@ -110,7 +112,7 @@ class ethereum_reader_Globals {
 		ethereum_reader_Globals::$ethereum_reader_server->setCacheReadFromDB($bCacheReadFromDB);
 		
 		$iCacheReadMode = (isset($config['eth_reader_db_caching_read_all']) && ($config['eth_reader_db_caching_read_all'] == 1) ? EthereumReaderServer::CACHE_READ_ALL : 0);
-		ethereum_reader_Globals::$ethereum_reader_server->setCacheSaveToDBMode($iCacheSaveMode);
+		ethereum_reader_Globals::$ethereum_reader_server->setCacheReadFromDBMode($iCacheReadMode);
 		
 		ethereum_reader_Globals::logString('***************************************************************************');
 		ethereum_reader_Globals::logString('Initializing EthereumReaderServer');
@@ -124,6 +126,11 @@ class ethereum_reader_Globals {
 		ethereum_reader_Globals::logString('Cache Read from DB is              :'.($bCacheReadFromDB ? 'true' : 'false'));
 		ethereum_reader_Globals::logString('Cache Read mode is                 :'.$iCacheReadMode);
 		ethereum_reader_Globals::logString('***************************************************************************');
+		
+		// check remote server support (version). Throws an exception if not ok
+		ethereum_reader_Globals::$ethereum_reader_server->checkServer();
+		
+		ethereum_reader_Globals::logString('Ethereum Reader REST Server is OK');
 		
 		return ethereum_reader_Globals::$ethereum_reader_server;
 	}

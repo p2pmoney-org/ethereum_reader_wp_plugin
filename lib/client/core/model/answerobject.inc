@@ -55,4 +55,11 @@ class AnswerObject {
 		return $this->array[$key];
 	}
 	
+	public function has($value) {
+		if (in_array($value, $this->array))
+			return true;
+		else
+			return false;
+	}
+	
 }

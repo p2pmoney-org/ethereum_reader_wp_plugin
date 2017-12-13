@@ -31,7 +31,7 @@ class Transaction extends AnswerObject {
 	}
 	
 	
-	public function init($data) {
+	protected function init($data) {
 		$this->hash = $data['hash'];
 		$this->sender = $data['sender'];
 		$this->recipient = $data['recipient'];
@@ -48,6 +48,27 @@ class Transaction extends AnswerObject {
 		$this->txIndex = $data['txIndex'];
 		$this->gasUsed = $data['gasUsed'];
 		$this->type = $data['type'];
+	}
+	
+	public function getData() {
+		$data['hash'] = $this->hash;
+		$data['sender'] = $this->sender;
+		$data['recipient'] = $this->recipient;
+		$data['accountNonce'] = $this->accountNonce;
+		$data['price'] = $this->price;
+		$data['gasLimit'] = $this->gasLimit;
+		$data['amount'] = $this->amount;
+		$data['block_id'] = $this->block_id;
+		$data['time'] = $this->time;
+		$data['newContract'] = $this->newContract;
+		$data['isContractTx'] = $this->isContractTx;
+		$data['blockHash'] = $this->blockHash;
+		$data['parentHash'] = $this->parentHash;
+		$data['txIndex'] = $this->txIndex;
+		$data['gasUsed'] = $this->gasUsed;
+		$data['type'] = $this->type;
+		
+		return $data;
 	}
 
 	public function getHash() {

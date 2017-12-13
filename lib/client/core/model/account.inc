@@ -48,6 +48,25 @@ class Account extends AnswerObject {
 		$this->lastscannedblock = (isset($data['lastscannedblock']) ? $data['lastscannedblock'] : -1);
 	}
 	
+	public function getData() {
+		$data['address'] = $this->address;
+		$data['balance'] = $this->balance;
+		$data['nonce'] = $this->nonce;
+		$data['code'] = $this->code;
+		$data['name'] = $this->name;
+		$data['storage'] = $this->storage;
+		$data['firstseen'] = $this->firstseen;
+		$data['transactioncount'] = $this->transactioncount;
+		
+		$data['currentblocknumber'] = $this->currentblocknumber;
+		$data['new_blocks_seen'] = $this->new_blocks_seen;
+		
+		$data['firstscannedblock'] = $this->firstscannedblock;
+		$data['lastscannedblock'] = $this->lastscannedblock;
+		
+		return $data;
+	}
+	
 	public function updateAccount($account) {
 		if (!($account instanceof Account))
 			return;

@@ -171,10 +171,15 @@ class AccountView {
 		// list of transactions
 		$widget .= '<div'.(isset($styles['txs_list']) ? ' style=\''.$styles['txs_list'].'\'' : ' style=\'txs_list\'').'>';
 		
-		$widget .= 'account has '.$account->getTransactionCount().' transactions in the blockchain.<br>';
+		$blockchaintxcount = $account->getTransactionCount();
+		$accnttxscount = $accounttransactions->getTransactionCount();
+		$highestscannedblock = $account->getLastScannedBlock();
+		$lowestscannedblock = $account->getFirstScannedBlock();
+		
+		$widget .= 'account has '.$blockchaintxcount.' transactions in the blockchain.<br>';
 		
 		if (isset($accounttransactions)) {
-			$widget .= 'scan has found '.$accounttransactions->getTransactionCount().'  transactions so far.<br>';
+			$widget .= 'scan between blocks '.$lowestscannedblock.' and '.$highestscannedblock.' has found '.$accnttxscount.'  transactions so far.<br>';
 		}
 		else {
 			$widget .= 'scan has not found any transaction for this account yet.<br>';
@@ -188,8 +193,6 @@ class AccountView {
 		$pagenumber = $viewcontext->getPageNumber();
 		$pagenumber = (isset($pagenumber) ? $pagenumber : 0);
 		
-		$accnttxscount = $accounttransactions->getTransactionCount();
-
 		$numberofpages = intval(($accnttxscount - 1) / $pagesize) + 1;
 		
 		// transactions for current page

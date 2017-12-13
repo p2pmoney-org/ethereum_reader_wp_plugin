@@ -4,6 +4,7 @@ namespace ethereum_reader\rest_client\core\model;
 use p2pmoney\common\core\model\DBConnection;
 use p2pmoney\common\core\model\P2PMoneyAlphaGlobals;
 
+require_once('utility.inc');
 require_once('accountpersistor.inc');
 require_once(dirname(__FILE__).'/../transactions.inc');
 
@@ -70,7 +71,7 @@ class TransactionPersistor {
 		$block_id = $this->transaction->getBlockId();
 		$time = ($this->transaction->getTime() != null ? "'".date('Y-m-d H:i:s', $this->transaction->getTime())."'" : "NULL");
 		$newContract = $this->transaction->getNewContract();
-		$isContractTx = '"'.$this->transaction->getHash().'"';
+		$isContractTx = '"'.$this->transaction->getIsContractTx().'"';
 		$blockHash = '"'.strtolower($this->transaction->getBlockHash()).'"';
 		$parentHash = '"'.strtolower($this->transaction->getParentHash()).'"';
 		$txIndex = $this->transaction->getTransactionIndex();
@@ -376,6 +377,56 @@ class TransactionPersistor {
 				
 			return $transactions;
 		}
+	}
+	
+	// json
+	static protected function getTransactionJson($transaction) {
+		$data = $transaction->getData();
+		
+		// transform time format
+		//$data['time'] = gmdate('Y-m-d H:i:s:Z',$data['time']);
+		$time = gmdate('c',$data['time']);
+		$time = str_replace('+00:00', '.000Z', $time);
+		
+		$data['time'] = $time;
+		
+		return Utility::json_string_encode($data);
+	}
+	
+	static public function getTransactionJsonAnswer($transaction) {
+		$jsondata = TransactionPersistor::getTransactionJson($transaction);
+		
+		$txjsonanswer['status'] = 1;
+		$txjsonanswer['data'] = Utility::json_array_encode($jsondata);
+			
+		return Utility::json_string_encode($txjsonanswer);
+	}
+	
+	static public function getTransactionsJsonAnswers($transactions) {
+		$jsonarray['status'] = 1;
+		
+		$transactionsarray = $transactions->getTransactionArray();
+		$jsondataarray = array();
+		
+		$cnt = count($transactionsarray);
+		
+		for ($i = 0; $i < $cnt; $i++) {
+			$transaction = $transactionsarray[$i];
+			
+			$txjson = TransactionPersistor::getTransactionJson($transaction);
+			
+			$jsondataarray[] = $txjson;
+			
+			// set answer in the transaction object
+			$txjsonanswer['status'] = 1;
+			$txjsonanswer['data'] =  Utility::json_array_encode($txjson);
+			
+			$transaction->setJsonAnswer(Utility::json_string_encode($txjsonanswer));
+		}
+		
+		$jsonarray['data'] = Utility::json_array_encode($jsondataarray);
+		
+		return Utility::json_string_encode($jsonarray);
 	}
 }
 

@@ -21,8 +21,8 @@ class ethereum_reader_views_styles {
 		$accountviewstyles['account_details'] = 'clear:both;color: #285b82;background-color: #e8e6e6;';
 		
 		$accountviewstyles['txs_paging'] = 'clear:both;font-size: 80%;color:#382020';
-		$accountviewstyles['txs_nav_button'] = 'float:right;width: 60px;text-align:center;border: 1px solid #b3bfb3;padding: 2px;margin-top: 10px;margin-left:5px;margin-bottom: 20px;;background-color: #e9ebf1;';
-		$accountviewstyles['txs_nav_page_button'] = 'float:right;width: 60px;text-align:center;border: 1px solid #b3bfb3;padding: 2px;;margin-top: 10px;margin-left:5px;margin-bottom: 20px;background-color: #c9d3e6;';
+		$accountviewstyles['txs_nav_button'] = 'float:right;width: 70px;text-align:center;border: 1px solid #b3bfb3;padding: 2px;margin-top: 10px;margin-left:5px;margin-bottom: 20px;;background-color: #e9ebf1;';
+		$accountviewstyles['txs_nav_page_button'] = 'float:right;width: 80px;text-align:center;border: 1px solid #b3bfb3;padding: 2px;;margin-top: 10px;margin-left:5px;margin-bottom: 20px;background-color: #c9d3e6;';
 		
 		$accountviewstyles['txs_list'] = 'clear:both;color:#423a3a';
 		$accountviewstyles['txs_header_row'] = 'font-weight: bold;background-color: #eae3dd;';

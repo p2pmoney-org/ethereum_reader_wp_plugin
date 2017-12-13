@@ -27,7 +27,18 @@ class ethereum_reader_account_widget extends WP_Widget {
 		ethereum_reader_Globals::logString('widget - ethereum_reader_account_widget::getAccountInfoContent called');
 		
 		// get info for this account
-		$ethereumserver = ethereum_reader_Globals::getEthereumReaderServer(); // initialize, if necessary, rest connection
+
+		// get ethereum reader server
+		try {
+			$ethereumserver = ethereum_reader_Globals::getEthereumReaderServer(); // initialize, if necessary, rest connection
+		
+		}
+		catch(Exception $e) {
+			$content = '<div>Exception has occured: '.$e->getMessage().'</div>';
+		
+			return $content;
+		}
+		
 		
 		$account = $ethereumserver->getAccount($address);
 		

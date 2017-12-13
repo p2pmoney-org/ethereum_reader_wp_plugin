@@ -101,4 +101,18 @@ class Transactions extends AnswerObject {
 				
 	}
 	
+	// json answer
+	public function getJsonAnswer() {
+		$jsonanswer = parent::getJsonAnswer();
+		
+		if (isset($jsonanswer))
+		return $jsonanswer;
+		
+		// we call transactionpersisor to format to json
+		$jsonanswer = TransactionPersistor::getTransactionsJsonAnswers($this);
+		
+		parent::setJsonAnswer($jsonanswer);
+		
+		return $jsonanswer;
+	}
 }

@@ -13,11 +13,17 @@ class ViewContext {
 	
 	private $bPreview;
 	
+	private $clientdevice;
+	
+	const DESKTOP_CLIENT = 0;
+	const MOBILE_CLIENT = 1;
+	
 	private $tab;
 	private $pagenumber;
 	private $pagesize;
 	
 	protected function __construct() {
+		$this->clientdevice = ViewContext::DESKTOP_CLIENT;
 	}
 	
 	
@@ -64,6 +70,17 @@ class ViewContext {
 	
 	public function setRequestedView($view) {
 		$this->view = $view;
+	}
+	
+	public function getClientDevice() {
+		return $this->clientdevice;
+	}
+	
+	public function setClientDevice($clientdevice) {
+		if ($clientdevice == ViewContext::MOBILE_CLIENT)
+			$this->clientdevice = ViewContext::MOBILE_CLIENT;
+		else 
+			$this->clientdevice = ViewContext::DESKTOP_CLIENT;
 	}
 	
 	public function isPreview() {
